@@ -64,17 +64,29 @@ def tobs():
 
     return jsonify(tobs)
 
-@app.route("/api/v1.0/<start>")
+@app.route("/api/v1.0/<start_date>")
 def calculations(start_date):
     session = Session(engine)
-    start_date = dt.datetime(start_date)
     sel = [measurement.station,
        func.min(measurement.tobs),
        func.max(measurement.tobs),
        func.avg(measurement.tobs)]
-    calculated = session.query(*sel).filter(measurement.date > start_date).all()
+    calculated = session.query(*sel).filter(measurement.date > start_date).\
+        group_by(measurement.date).all()
+
+    return jsonify(calculated)
+    
+@app.route("/api/v1.0/<start_date>/<end_date>")
+def calculations_w_end(start_date, end_date):
+    session = Session(engine)
+    sel = [measurement.station,
+       func.min(measurement.tobs),
+       func.max(measurement.tobs),
+       func.avg(measurement.tobs)]
+    calculated = session.query(*sel).filter(measurement.date > start_date).\
+        filter(measurement.date<end_date).group_by(measurement.date).all()
 
     return jsonify(calculated)
 
 if __name__ == "__main__":
-    app.run(debug=False)
+    app.run(debug=True)
